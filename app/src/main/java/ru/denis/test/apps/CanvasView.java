@@ -20,12 +20,28 @@ public class CanvasView extends View {
     Point bitmap_position;
     Point bitmap_size;
 
-    PointF TouchPointStart, SecondTouchPointStart;
+    Paint redPaint;
+    Paint bluePaint;
+
+
+    class Pointer
+    {
+        PointF prev, curr;
+        int id;
+        public Pointer()
+        {
+            prev = new PointF(0,0);
+            curr = new PointF(0,0);
+            id = -1;
+        }
+    }
+    Pointer ptrA, ptrB;
+
     PointF TouchPointPrev, SecondTouchPointPrev;
     int PointerId, PointerIdSecond;
-    PointF TouchVector, TouchVectorSecond;
 
     PointF activeMoveOffset;
+    boolean bGesture = false;
 
     int scale = 1;
 
@@ -42,21 +58,26 @@ public class CanvasView extends View {
     {
         //points
         bitmap_position = new Point(0,0);
-        TouchPointStart = new PointF(0,0);
-        TouchPointPrev = new PointF(0,0);
-        TouchVector = new PointF(0,0);
-        PointerId = -1;
-        SecondTouchPointStart = new PointF(0,0);
-        SecondTouchPointPrev = new PointF(0,0);
-        TouchVectorSecond = new PointF(0,0);
-        PointerIdSecond = -1;
         activeMoveOffset = new PointF(0,0);
+        ptrA = new Pointer();
+        ptrB = new Pointer();
+
 
         //draw
         paint = new Paint();
         paint.setAntiAlias(false);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.BLACK);
+
+        redPaint = new Paint();
+        redPaint.setAntiAlias(false);
+        redPaint.setStyle(Paint.Style.FILL);
+        redPaint.setColor(Color.RED);
+
+        bluePaint = new Paint();
+        bluePaint.setAntiAlias(false);
+        bluePaint.setStyle(Paint.Style.FILL);
+        bluePaint.setColor(Color.BLUE);
 
         bitmap = Bitmap.createBitmap(300, 300, Bitmap.Config.RGB_565);
         bitmapCanvas = new Canvas(bitmap);
@@ -77,12 +98,34 @@ public class CanvasView extends View {
 
     protected double Norma(PointF vec)
     {
-        return Math.sqrt(vec.x*vec.x + vec.y+vec.y);
+        double a = vec.x*vec.x;
+        double b = vec.y*vec.y;
+        double c = a + b;
+        if(a<=0)
+        {
+            Log.i(DBG_TAG, "Norma x: "+Double.toString(vec.x)+"^2 <= "+Double.toString(a));
+        }
+        if(b<=0)
+        {
+            Log.i(DBG_TAG, "Norma y: "+Double.toString(vec.y)+"^2 <= "+Double.toString(b));
+        }
+        return Math.sqrt(c);
     }
 
-    protected float Mult(PointF A, PointF B)
+    protected double Mult(PointF A, PointF B)
     {
-        return  A.x*B.x + A.y*B.y;
+        double a = A.x*B.x;
+        double b = A.y*B.y;
+        double c = a + b;
+        if(a<=0)
+        {
+            Log.i(DBG_TAG, "Mult: x+x < 0");
+        }
+        if(b<=0)
+        {
+            Log.i(DBG_TAG, "Mult: y+y < 0");
+        }
+        return c;
     }
     protected PointF Diff(PointF A, PointF B)
     {
@@ -94,10 +137,10 @@ public class CanvasView extends View {
 
     protected double GetDeg(PointF A, PointF B)
     {
-        Log.i(DBG_TAG, "mult"+Double.toString(Mult(A,B)));
-        Log.i(DBG_TAG, "normA"+Double.toString(Norma(A)));
-        Log.i(DBG_TAG, "normB"+Double.toString(Norma(B)));
-        double cos = Mult(A,B) / (Norma(A) * Norma(B));
+        double a = Mult(A,B);
+        double b = Norma(A);
+        double c = Norma(B);
+        double cos = a / (b+c);
         Log.i(DBG_TAG, "cos"+Double.toString(cos));
         double angle = Math.cos(cos) * 180.0 / Math.PI;
         return angle;
@@ -107,108 +150,110 @@ public class CanvasView extends View {
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(Color.WHITE);
         canvas.drawBitmap(bitmap, bitmap_position.x, bitmap_position.y, paint);
+        canvas.drawCircle(ptrA.curr.x, ptrA.curr.y, 20, redPaint);
+        canvas.drawCircle(ptrA.prev.x, ptrA.prev.y, 10, redPaint);
+
+        canvas.drawCircle(ptrB.curr.x, ptrB.curr.y, 20, bluePaint);
+        canvas.drawCircle(ptrB.prev.x, ptrB.prev.y, 10, bluePaint);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
 
+        // событие
+        int actionMask = event.getActionMasked();
+        // индекс касания
         int pointerIndex = event.getActionIndex();
+        // число касаний
+        int pointerCount = event.getPointerCount();
 
         switch (event.getActionMasked())
         {
             case MotionEvent.ACTION_DOWN:
-                Log.i(DBG_TAG, "First Point");
-                //save touch start coord
-                TouchPointStart.x = event.getX();
-                TouchPointStart.y = event.getY();
-                //startPoint also prevPoint to ACTION_MOVE
-                TouchPointPrev = TouchPointStart;
-                PointerId = event.getPointerId(pointerIndex);
-                //bitmapCanvas.drawCircle(x, y, 20, paint);
-                //invalidate();
-                break;
+                //start touch
             case MotionEvent.ACTION_POINTER_DOWN:
-                Log.i(DBG_TAG, "Second Point");
-                //skip if we already have second touch
-                if(PointerIdSecond != -1)
+                if(ptrA.id == -1)
                 {
-                    break;
+                    ptrA.id = event.getPointerId(pointerIndex);
+                    ptrA.curr.x = event.getX(pointerIndex);
+                    ptrA.curr.y = event.getY(pointerIndex);
+                    ptrA.prev.x = event.getX(pointerIndex);
+                    ptrA.prev.y = event.getY(pointerIndex);
                 }
-                //save touch start coord
-                SecondTouchPointStart.x = event.getX();
-                SecondTouchPointStart.y = event.getY();
-                //startPoint also prevPoint to ACTION_MOVE
-                SecondTouchPointPrev = SecondTouchPointStart;
-                PointerIdSecond = event.getPointerId(pointerIndex);
+                else if(ptrB.id == -1)
+                {
+                    bGesture = true;
+                    ptrB.id = event.getPointerId(pointerIndex);
+                    ptrB.curr.x = event.getX(pointerIndex);
+                    ptrB.curr.y = event.getY(pointerIndex);
+                    ptrB.prev.x = event.getX(pointerIndex);
+                    ptrB.prev.y = event.getY(pointerIndex);
+                }
+                //add pointer
                 break;
             case MotionEvent.ACTION_UP:
-                Log.i(DBG_TAG, "all release");
-
+                //end touch
             case MotionEvent.ACTION_POINTER_UP:
-                Log.i(DBG_TAG, "pointer release");
-                if(PointerId == event.getPointerId(pointerIndex))
+                //remove pointer
+                if(ptrA.id == event.getPointerId(pointerIndex))
                 {
-                    PointerId = -1;
+                    bGesture = false;
+                    ptrA.id = -1;
                 }
-                if(PointerIdSecond == event.getPointerId(pointerIndex))
+                if(ptrB.id == event.getPointerId(pointerIndex))
                 {
-                    PointerIdSecond = -1;
+                    bGesture = false;
+                    ptrB.id = -1;
                 }
                 break;
 
             case MotionEvent.ACTION_CANCEL:
                 //think it all input interupt
-                PointerId = -1;
-                PointerIdSecond = -1;
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if( (PointerId != -1) && (PointerIdSecond != -1) )
+                if(bGesture)
                 {
-                    double Distance;
-                    int firstIndex = 0 , secondIndex = 0;
-
-                    if(PointerId == event.getPointerId(0)) {
-                        firstIndex = 0;
-                        secondIndex = 1;
+                    //update
+                    for(int i=0; i<pointerCount; i++) {
+                        if (ptrA.id == event.getPointerId(i)) {
+                            if((Math.abs(ptrA.curr.x - event.getX(i)) > 0.01) ||
+                               (Math.abs(ptrA.curr.y - event.getY(i)) > 0.01) ) {
+                                ptrA.prev.x = ptrA.curr.x;
+                                ptrA.prev.y = ptrA.curr.y;
+                                ptrA.curr.x = event.getX(i);
+                                ptrA.curr.y = event.getY(i);
+                            }
+                        }
+                        if (ptrB.id == event.getPointerId(i)) {
+                            if( (Math.abs(ptrB.curr.x - event.getX(i)) > 0.01) ||
+                                (Math.abs(ptrB.curr.y - event.getY(i)) > 0.01) ) {
+                                ptrB.prev.x = ptrB.curr.x;
+                                ptrB.prev.y = ptrB.curr.y;
+                                ptrB.curr.x = event.getX(i);
+                                ptrB.curr.y = event.getY(i);
+                            }
+                        }
                     }
-                    else if(PointerId == event.getPointerId(1)) {
-                        firstIndex = 1;
-                        secondIndex = 0;
+
+                    //vector
+                    PointF vecA = new PointF(),
+                            vecB = new PointF();
+                    vecA.x = ptrA.curr.x - ptrA.prev.x;
+                    vecA.y = ptrA.curr.y - ptrA.prev.y;
+                    vecB.x = ptrB.curr.x - ptrB.prev.x;
+                    vecB.y = ptrB.curr.y - ptrB.prev.y;
+
+                    double AB = (vecA.x * vecB.x) + (vecA.y * vecB.y);
+                    double nA = Norma(vecA),
+                            nB = Norma(vecB);
+                    if( (nA!=0) && (nB!=0) && (AB!=0) ) {
+                        double cos = AB / (nA * nB);
+                        cos = cos > 1.0 ? 0.99 : cos;
+                        double angle = Math.acos(cos) * 180.0 / Math.PI;
+
                     }
-                    else
-                    {
-                        Log.i(DBG_TAG, "interrupt");
-                        break;
-                    }
-
-                    //get vector
-                    TouchVector.x = event.getX(firstIndex) - TouchPointPrev.x;
-                    TouchVector.y = event.getY(firstIndex) - TouchPointPrev.y;
-                    TouchPointPrev.x = event.getX(firstIndex);
-                    TouchPointPrev.y = event.getY(firstIndex);
-
-                    //get vector
-                    TouchVectorSecond.x = event.getX(secondIndex) - SecondTouchPointPrev.x;
-                    TouchVectorSecond.y = event.getY(secondIndex) - SecondTouchPointPrev.y;
-                    SecondTouchPointPrev.x = event.getX(secondIndex);
-                    SecondTouchPointPrev.y = event.getY(secondIndex);
-
-                    double angle = GetDeg(TouchVectorSecond, TouchVector);
-                    Log.i(DBG_TAG, Double.toString(angle));
-                    if( (angle >= 0) && (angle <= 20) )
-                    {
-                        //same course
-                        // move on distance ?
-                        activeMoveOffset.x = x - TouchPointStart.x;
-                        activeMoveOffset.y = y - TouchPointStart.y;
-
-                        bitmap_position.x += activeMoveOffset.x;
-                        bitmap_position.y += activeMoveOffset.y;
-                        invalidate();
-                    }
+                    invalidate();
                 }
                 break;
 
