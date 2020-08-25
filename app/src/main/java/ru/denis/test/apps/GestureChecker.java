@@ -1,12 +1,14 @@
 package ru.denis.test.apps;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.graphics.*;
 
 
 class GestureChecker
 {
-	
+	private static final String DBG_TAG = "DBG_Gesture";
+
 	/* struct with Pointer description*/
 	class Pointer
 	{
@@ -26,6 +28,7 @@ class GestureChecker
 	/* Gesture type */
 	public enum GestureType
 	{
+		NoEvent,
 		PointerPress,
 		PointerMove,
 		PointerRelease,
@@ -39,7 +42,7 @@ class GestureChecker
 	double distBetweenPointers;
 	PointF startPointA, startPointB;
 	GestureType currentGesture;
-	boolean bComplexGesture = false;
+	boolean bComplexGesture = false, bStopUntilAllEnd = false;
 	
 	
 	public GestureChecker()
@@ -86,12 +89,25 @@ class GestureChecker
 	{
 		int pointerIndex = event.getActionIndex();
 		int pointerCount = event.getPointerCount();
+		
+		currentGesture = GestureType.NoEvent;
+
 
 		switch (event.getActionMasked())
 		{
 			case MotionEvent.ACTION_DOWN:
+				if(bStopUntilAllEnd)
+				{
+					break;
+				}
+				Log.i(DBG_TAG, "ACTION_DOWN");
 				//start touch
 			case MotionEvent.ACTION_POINTER_DOWN:
+				if(bStopUntilAllEnd)
+				{
+					break;
+				}
+				Log.i(DBG_TAG, "ACTION_POINTER_DOWN");
 				if(ptrA.id == -1)
 				{
 					ptrA.id = event.getPointerId(pointerIndex);
@@ -123,55 +139,45 @@ class GestureChecker
 				else if (pointersInUse == 1)
 				{
 					currentGesture = GestureType.PointerPress;
-					if(ptrB.id != -1)
-					{
-						currentCoord.x = ptrB.curr.x;
-						currentCoord.y = ptrB.curr.y;
-					}
-					else if(ptrA.id != -1)
-					{
-						currentCoord.x = ptrA.curr.x;
-						currentCoord.y = ptrA.curr.y;
-					}
-					else
-					{
-						currentCoord.x = 0;
-						currentCoord.y = 0;
-					}
+					currentCoord.x = ptrA.curr.x;
+					currentCoord.y = ptrA.curr.y;
 				}
 				//add pointer
 				break;
 			case MotionEvent.ACTION_UP:
+				Log.i(DBG_TAG, "ACTION_UP");
 				//all touches ended
 				currentGesture = GestureType.PointerRelease;
+				bStopUntilAllEnd = false;
+				ptrA.id = -1;
+				ptrB.id = -1;
+				pointersInUse = 0;
+				currentCoord.x = ptrA.curr.x;
+				currentCoord.y = ptrA.curr.y;
+				break;
 				//end touch
 			case MotionEvent.ACTION_POINTER_UP:
+				Log.i(DBG_TAG, "ACTION_POINTER_UP");
 				//remove pointer
-				if(ptrA.id == event.getPointerId(pointerIndex))
-				{
-					bGesture = false;
-					ptrA.id = -1;
-					pointersInUse -= 1;
-					currentCoord.x = ptrA.curr.x;
-					currentCoord.y = ptrA.curr.y;
-				}
-				if(ptrB.id == event.getPointerId(pointerIndex))
-				{
-					bGesture = false;
-					ptrB.id = -1;
-					pointersInUse -= 1;
-					currentCoord.x = ptrB.curr.x;
-					currentCoord.y = ptrB.curr.y;
-				}
+				//TODO stop all process, until all-new pointers
+				bComplexGesture = false;
+				bStopUntilAllEnd = true;
 				break;
 
 			case MotionEvent.ACTION_CANCEL:
+				Log.i(DBG_TAG, "ACTION_CANCEL");
 				//think it all input interupt
 				currentGesture = GestureType.PointerRelease;
 				pointersInUse = 0;
+				bStopUntilAllEnd = false;
 				break;
 
 			case MotionEvent.ACTION_MOVE:
+				if(bStopUntilAllEnd)
+				{
+					break;
+				}
+				Log.i(DBG_TAG, "ACTION_MOVE");
 				if(!bComplexGesture)
 				{
 					currentGesture = GestureType.PointerMove;
@@ -228,8 +234,8 @@ class GestureChecker
 						//same course
 						//move gesture
 						currentGesture = GestureType.Move;
-						//calc offset
-						moveOffset = diff(ptrA.curr, startPointA);
+						//calc offset - between current and previous call
+						moveOffset = diff(ptrA.curr, ptrA.prev);
 					}
 					
 					if( (angle >= 160) && (angle <= 180) )
@@ -237,6 +243,10 @@ class GestureChecker
 						//oposite course
 						//scale gesture
 						currentGesture = GestureType.Scale;
+						//dist
+						PointF prevAB = diff(ptrA.prev, ptrB.prev), currAB = diff(ptrA.curr, ptrB.curr);
+						double prevDist = norma(prevAB), currDist = norma(currAB);
+						distBetweenPointers = currDist-prevDist;
 					}
 				}
 				break;
@@ -248,7 +258,7 @@ class GestureChecker
 	
 	public GestureType getGesture()
 	{
-		
+		return currentGesture;
 	}
 	
 	public float getX()
@@ -277,13 +287,13 @@ class GestureChecker
 	{
 		if(currentGesture == GestureType.Move)
 		{
-			return moveOffset
+			return moveOffset;
 		}
 		return null;
 	}
 	
-	public float getScale()
+	public double getScale()
 	{
-		return 1;
+		return distBetweenPointers;
 	}
 }

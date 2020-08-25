@@ -25,7 +25,8 @@ public class CanvasView extends View {
 
 	PointF activeMoveOffset;
 
-	int scale = 1;
+	Rect rectSrc = new Rect(0,0,300,300);
+	RectF rectDst = new RectF(0,0,300,300);
 
 	Bitmap tmpResizeBitmap;
 	
@@ -45,6 +46,8 @@ public class CanvasView extends View {
 		
 		//points
 		bitmap_position = new Point(0,0);
+		activeMoveOffset = new PointF(0,0);
+		bitmap_size = new Point(300, 300);
 
 		//draw
 		paint = new Paint();
@@ -62,7 +65,7 @@ public class CanvasView extends View {
 		bluePaint.setStyle(Paint.Style.FILL);
 		bluePaint.setColor(Color.BLUE);
 
-		bitmap = Bitmap.createBitmap(300, 300, Bitmap.Config.RGB_565);
+		bitmap = Bitmap.createBitmap(rectSrc.width(), rectSrc.height(), Bitmap.Config.RGB_565);
 		bitmapCanvas = new Canvas(bitmap);
 		bitmapCanvas.drawColor(Color.GRAY);
 
@@ -82,7 +85,7 @@ public class CanvasView extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(Color.WHITE);
-		canvas.drawBitmap(bitmap, bitmap_position.x, bitmap_position.y, paint);
+		canvas.drawBitmap(bitmap, rectSrc, rectDst, paint);
 	}
 
 	@Override
@@ -92,23 +95,44 @@ public class CanvasView extends View {
 		
 		switch (gestureChecker.getGesture())
 		{
-			case GestureChecker.GestureType.PointerPress:
+			case PointerPress:
 				//start touch
 				gestureChecker.getX();
 				gestureChecker.getY();
+				Log.i(DBG_TAG, "press");
 				break;
-			case GestureChecker.GestureType.PointerMove:
+			case PointerMove:
 				//move
+				Log.i(DBG_TAG, "move");
 				break;
-			case GestureChecker.GestureType.PointerRelease:
+			case PointerRelease:
 				//end touch
+				Log.i(DBG_TAG, "release");
 				break;
-			case GestureChecker.GestureType.Move:
+			case Move:
 				//move gesture
-				gestureChecker.getOffset();
+				Log.i(DBG_TAG, "gesture_move");
+				activeMoveOffset = gestureChecker.getOffset();
+				rectDst.offset(activeMoveOffset.x, activeMoveOffset.y);
+				invalidate();
 				break;
-			case GestureChecker.GestureType.Scale:
+			case Scale:
 				//scale gesture
+				Log.i(DBG_TAG, "gesture_scale");
+				double resizeOn = gestureChecker.getScale();
+				//if(bitmap_size.x + resizeOn > 0) {
+					rectDst.left += (-resizeOn/2);
+					rectDst.right += (resizeOn/2);
+					//bitmap_size.x += resizeOn;
+					//bitmap_position.x -= resizeOn;
+				//}
+				//if(bitmap_size.y + resizeOn > 0) {
+					rectDst.top += (-resizeOn/2);
+					rectDst.bottom += (resizeOn/2);
+					//bitmap_size.y += resizeOn;
+					//bitmap_position.y -= resizeOn;
+				//}
+				invalidate();
 				break;
 		}
 		return true;
