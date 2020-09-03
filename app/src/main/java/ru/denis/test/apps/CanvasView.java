@@ -16,6 +16,8 @@ public class CanvasView extends View {
 	private Paint paint;
 	private Bitmap bitmap;
 	private Canvas bitmapCanvas;
+	
+	PointF LastDrawPoint;
 
 	Point bitmap_position;
 	Point bitmap_size;
@@ -31,6 +33,8 @@ public class CanvasView extends View {
 	Bitmap tmpResizeBitmap;
 	
 	GestureChecker gestureChecker;
+	
+	boolean bNeedDrawPoint = false;
 
 
 	public CanvasView(Context ctx, AttributeSet attrs){
@@ -48,6 +52,7 @@ public class CanvasView extends View {
 		bitmap_position = new Point(0,0);
 		activeMoveOffset = new PointF(0,0);
 		bitmap_size = new Point(300, 300);
+		LastDrawPoint = new PointF(0,0);
 
 		//draw
 		paint = new Paint();
@@ -86,6 +91,12 @@ public class CanvasView extends View {
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(Color.WHITE);
 		canvas.drawBitmap(bitmap, rectSrc, rectDst, paint);
+		
+		if(bNeedDrawPoint)
+		{
+			bitmapCanvas.drawCircle(LastDrawPoint.x, LastDrawPoint.y, 3, redPaint);
+			bNeedDrawPoint = false;
+		}
 	}
 
 	@Override
@@ -97,8 +108,21 @@ public class CanvasView extends View {
 		{
 			case PointerPress:
 				//start touch
-				gestureChecker.getX();
-				gestureChecker.getY();
+				LastDrawPoint.x = gestureChecker.getX();
+				LastDrawPoint.y = gestureChecker.getY();
+				//convert coords
+				LastDrawPoint.x -= rectDst.left;
+				LastDrawPoint.y -= rectDst.top;
+				if( (LastDrawPoint.x < 0) || (LastDrawPoint.y < 0) )
+				{
+					break;
+				}
+				LastDrawPoint.x = LastDrawPoint.x / (rectDst.width() / rectSrc.width());
+				LastDrawPoint.y = LastDrawPoint.y / (rectDst.height() / rectSrc.height());
+				bNeedDrawPoint = true;
+				invalidate();
+				
+				//draw point in x & y
 				Log.i(DBG_TAG, "press");
 				break;
 			case PointerMove:
@@ -120,18 +144,24 @@ public class CanvasView extends View {
 				//scale gesture
 				Log.i(DBG_TAG, "gesture_scale");
 				double resizeOn = gestureChecker.getScale();
-				//if(bitmap_size.x + resizeOn > 0) {
-					rectDst.left += (-resizeOn/2);
-					rectDst.right += (resizeOn/2);
-					//bitmap_size.x += resizeOn;
-					//bitmap_position.x -= resizeOn;
-				//}
-				//if(bitmap_size.y + resizeOn > 0) {
-					rectDst.top += (-resizeOn/2);
-					rectDst.bottom += (resizeOn/2);
-					//bitmap_size.y += resizeOn;
-					//bitmap_position.y -= resizeOn;
-				//}
+				rectDst.left += (-resizeOn/2);
+				rectDst.right += (resizeOn/2);
+				rectDst.top += (-resizeOn/2);
+				rectDst.bottom += (resizeOn/2);
+				
+				//check rectDst width, height
+				if(rectDst.width() < rectSrc.width())
+				{
+					float diffW = rectSrc.width() - rectDst.width();
+					float offset = diffW / 2;
+					rectDst.left += -offset;
+					rectDst.right += offset;
+					rectDst.top += -offset;
+					rectDst.bottom += offset;
+					//always larger than original size
+				}
+				//check max size ?
+				
 				invalidate();
 				break;
 		}
