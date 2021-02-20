@@ -1,0 +1,63 @@
+
+onTouchStart
+	new_point = 
+	{
+		prev_pos;
+		curr_pos;
+		id
+	}
+	points.add(new_point)
+	if(points.size > 1){
+		state = complex_gesture;
+	}
+
+onTouchRelease
+	point.remove(points.find(id))
+	if(points.size < 2){
+		state = simple_gesture;
+	}
+	
+onMove
+	for(all_moving_points)
+		point = points.find(id)
+		point.update(all_moving_points[id].coord)
+	
+	if(points.size < 2)
+		return;	
+	
+	PointA = points[0]
+	PointB = points[1]
+	
+	if(isScale(PointA, PointB))
+	{
+		distanceScale = 
+	}
+	else if(isMove(PointA, PointB))
+	{
+		distanceMove = 
+	}
+		
+		
+		
+Painter:
+	max & min scaled size?
+		max depend on Scaled Pixel Size ?
+	
+	resize by edge drag
+	
+	select cut/past
+	save selection to file?
+	
+	auto save/load previous file
+	save/load file - dialog?
+	
+	status bar : current(last?) position, canvas size
+	
+	draw line from touchstart + touchmove + touchstop points
+	
+	size & color change dialog
+	
+	DrawTools selection
+		
+		
+
