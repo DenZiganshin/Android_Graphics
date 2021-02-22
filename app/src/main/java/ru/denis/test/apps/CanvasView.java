@@ -32,21 +32,24 @@ public class CanvasView extends View {
 
 	Bitmap tmpResizeBitmap;
 	
-	GestureChecker gestureChecker;
+	GestureDetect m_gestDect;
+
+	float m_diag;
 	
 	boolean bNeedDrawPoint = false;
 
 
 	public CanvasView(Context ctx, AttributeSet attrs){
 		super(ctx, attrs);
+		m_diag = get_diag(ctx);
 		init();
-		get_screen_size(ctx);
+		//get_screen_size(ctx);
 	}
 
 	private void init()
 	{
 		//classes
-		gestureChecker = new GestureChecker();
+		m_gestDect = new GestureDetect(m_diag);
 		
 		//points
 		bitmap_position = new Point(0,0);
@@ -75,11 +78,85 @@ public class CanvasView extends View {
 		bitmapCanvas.drawColor(Color.GRAY);
 
 	}
+
+
 	private void get_screen_size(Context ctx){
 		WindowManager manager = (WindowManager)ctx.getSystemService(Context.WINDOW_SERVICE);
 		Display display = manager.getDefaultDisplay();
 		Point size = new Point();
 		display.getSize(size);
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		int actionId = event.getActionMasked();
+
+		m_gestDect.process(event);
+
+		switch (actionId){
+			case MotionEvent.ACTION_DOWN:
+				//start draw
+				break;
+			case MotionEvent.ACTION_UP:
+				//end draw
+				break;
+			case MotionEvent.ACTION_MOVE:
+				if(event.getPointerCount() > 1){
+					//cancel draw
+
+					//move canvas
+					PointF offset = m_gestDect.getOffset();
+					float scale = m_gestDect.getScale();
+					PointF centerPoint = m_gestDect.getCenter();
+
+					rectDst.offset(offset.x, offset.y);
+
+					RectF tmp = new RectF();
+
+					tmp.top = rectDst.top - centerPoint.y;
+					tmp.bottom = rectDst.bottom - centerPoint.y;
+					tmp.left = rectDst.left - centerPoint.x;
+					tmp.right = rectDst.right - centerPoint.x;
+
+					tmp.top *= scale;
+					tmp.bottom *= scale;
+					tmp.left *= scale;
+					tmp.right *= scale;
+
+					tmp.top += centerPoint.y;
+					tmp.bottom += centerPoint.y;
+					tmp.left += centerPoint.x;
+					tmp.right += centerPoint.x;
+
+					rectDst.top = tmp.top;
+					rectDst.bottom = tmp.bottom;
+					rectDst.left = tmp.left;
+					rectDst.right = tmp.right;
+
+					Log.i("DBG", offset.toString());
+					//Log.i("DBG", String.valueOf(scale));
+
+
+					invalidate();
+				}else{
+					//draw
+				}
+				break;
+
+			case MotionEvent.ACTION_POINTER_DOWN:
+			case MotionEvent.ACTION_POINTER_UP:
+				break;
+		}
+
+		return true;
+	}
+
+	private float get_diag(Context ctx){
+		WindowManager manager = (WindowManager)ctx.getSystemService(Context.WINDOW_SERVICE);
+		Display display = manager.getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		return (float)Math.sqrt(size.x*size.x + size.y*size.y);
 	}
 
 	protected void drawResizePoints(Context ctx)
@@ -91,80 +168,11 @@ public class CanvasView extends View {
 	protected void onDraw(Canvas canvas) {
 		canvas.drawColor(Color.WHITE);
 		canvas.drawBitmap(bitmap, rectSrc, rectDst, paint);
-		
+
 		if(bNeedDrawPoint)
 		{
 			bitmapCanvas.drawCircle(LastDrawPoint.x, LastDrawPoint.y, 3, redPaint);
 			bNeedDrawPoint = false;
 		}
-	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-
-		gestureChecker.touchEventProcess(event);
-		
-		switch (gestureChecker.getGesture())
-		{
-			case PointerPress:
-				//start touch
-				LastDrawPoint.x = gestureChecker.getX();
-				LastDrawPoint.y = gestureChecker.getY();
-				//convert coords
-				LastDrawPoint.x -= rectDst.left;
-				LastDrawPoint.y -= rectDst.top;
-				if( (LastDrawPoint.x < 0) || (LastDrawPoint.y < 0) )
-				{
-					break;
-				}
-				LastDrawPoint.x = LastDrawPoint.x / (rectDst.width() / rectSrc.width());
-				LastDrawPoint.y = LastDrawPoint.y / (rectDst.height() / rectSrc.height());
-				bNeedDrawPoint = true;
-				invalidate();
-				
-				//draw point in x & y
-				Log.i(DBG_TAG, "press");
-				break;
-			case PointerMove:
-				//move
-				Log.i(DBG_TAG, "move");
-				break;
-			case PointerRelease:
-				//end touch
-				Log.i(DBG_TAG, "release");
-				break;
-			case Move:
-				//move gesture
-				Log.i(DBG_TAG, "gesture_move");
-				activeMoveOffset = gestureChecker.getOffset();
-				rectDst.offset(activeMoveOffset.x, activeMoveOffset.y);
-				invalidate();
-				break;
-			case Scale:
-				//scale gesture
-				Log.i(DBG_TAG, "gesture_scale");
-				double resizeOn = gestureChecker.getScale();
-				rectDst.left += (-resizeOn/2);
-				rectDst.right += (resizeOn/2);
-				rectDst.top += (-resizeOn/2);
-				rectDst.bottom += (resizeOn/2);
-				
-				//check rectDst width, height
-				if(rectDst.width() < rectSrc.width())
-				{
-					float diffW = rectSrc.width() - rectDst.width();
-					float offset = diffW / 2;
-					rectDst.left += -offset;
-					rectDst.right += offset;
-					rectDst.top += -offset;
-					rectDst.bottom += offset;
-					//always larger than original size
-				}
-				//check max size ?
-				
-				invalidate();
-				break;
-		}
-		return true;
 	}
 }
