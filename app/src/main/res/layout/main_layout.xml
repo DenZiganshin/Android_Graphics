@@ -12,4 +12,5 @@
         <ImageButton android:id="@+id/btnErase" android:layout_width="56dp" android:layout_height="56dp" android:background="#0000ff" android:layout_margin="2dp"/>
     </LinearLayout>
 
+    <ImageButton android:id="@+id/btnMenu" android:layout_width="56dp" android:layout_height="56dp" android:background="#aaaaaa" android:layout_alignParentRight="true"/>
 </RelativeLayout>
