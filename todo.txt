@@ -4,10 +4,7 @@
 		min - 100%
 		
 	quadTo для рисования
-	
-	update eraser logic
-		 mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-	
+		
 	trasparent layer + changable backgroud (grid or lines ? image ? like notebook)
 	
 	select cut/past

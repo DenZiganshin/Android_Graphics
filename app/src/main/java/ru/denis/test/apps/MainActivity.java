@@ -28,6 +28,8 @@ public class MainActivity extends Activity  implements View.OnClickListener, Vie
 
 	CanvasView CvsView;
 	final String SPNAME = "AppConfig";
+	private static final int CREATE_FILE = 1;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +78,17 @@ public class MainActivity extends Activity  implements View.OnClickListener, Vie
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.menu_new:
+				/*
 				Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 				startActivityForResult(intent, 42);
+				*/
+				Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+				intent.setType("image/png");
+				intent.putExtra(Intent.EXTRA_TITLE, "note.png");
+				startActivityForResult(intent, CREATE_FILE);
+
+
 
 				return true;
 			case R.id.menu_quit:
@@ -88,7 +99,7 @@ public class MainActivity extends Activity  implements View.OnClickListener, Vie
 		}
 
 	}
-
+/*
 	public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
 		if (resultCode == RESULT_OK) {
 
@@ -113,6 +124,31 @@ public class MainActivity extends Activity  implements View.OnClickListener, Vie
 			}
 		}
 	}
+ */
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode,
+								 Intent resultData) {
+		if (requestCode == CREATE_FILE
+				&& resultCode == Activity.RESULT_OK) {
+			// The result data contains a URI for the document or directory that
+			// the user selected.
+			Uri uri = null;
+			if (resultData != null) {
+				uri = resultData.getData();
+				// Perform operations on the document using its URI.
+				Bitmap bitmap = CvsView.getBitmap();
+				try{
+					OutputStream out = getContentResolver().openOutputStream(uri);
+					bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+					out.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 
 	@Override
 	public void onClick(View v) {

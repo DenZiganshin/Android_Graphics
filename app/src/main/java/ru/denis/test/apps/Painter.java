@@ -4,6 +4,7 @@ import android.graphics.*;
 
 public class Painter {
 
+	private Bitmap m_BackBitmap;
 	private Bitmap m_MainBitmap;
 	private Canvas m_MainCanvas;
 
@@ -58,7 +59,23 @@ public class Painter {
 
 		m_MainBitmap = Bitmap.createBitmap(m_bitmapSize.x, m_bitmapSize.y, Bitmap.Config.RGBA_F16, true);
 		m_MainCanvas = new Canvas(m_MainBitmap);
-		m_MainCanvas.drawColor(Color.WHITE);
+		//m_MainCanvas.drawColor(Color.WHITE);
+
+		//grid background
+		m_BackBitmap = Bitmap.createBitmap(m_bitmapSize.x, m_bitmapSize.y, Bitmap.Config.RGBA_F16, true);
+		Paint gridPaint = new Paint();
+		gridPaint.setAntiAlias(false);
+		gridPaint.setStyle(Paint.Style.STROKE);
+		gridPaint.setStrokeWidth(3);
+		gridPaint.setColor(Color.GRAY);
+		Canvas backCanvas = new Canvas(m_BackBitmap);
+		backCanvas.drawColor(Color.rgb(237,237,231));
+		for( int i=0; i<m_bitmapSize.x; i+=50){
+			backCanvas.drawLine(i, 0, i, m_bitmapSize.y, gridPaint);
+		}
+		for( int i=0; i<m_bitmapSize.y; i+=50){
+			backCanvas.drawLine(0, i, m_bitmapSize.x, i, gridPaint);
+		}
 	}
 
 	public void init(Bitmap bitmap){
@@ -88,12 +105,29 @@ public class Painter {
 		m_ClearPaint.setStyle(Paint.Style.STROKE);
 		m_ClearPaint.setStrokeWidth(3);
 		m_ClearPaint.setColor(Color.WHITE);
+		m_ClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
 		m_CurrentPaint = m_PenPaint;
 		m_CurrentTool = TOOL_DRAW;
 
 		m_MainBitmap = Bitmap.createBitmap(bitmap);
 		m_MainCanvas = new Canvas(m_MainBitmap);
+
+		//grid background
+		m_BackBitmap = Bitmap.createBitmap(m_bitmapSize.x, m_bitmapSize.y, Bitmap.Config.RGBA_F16, true);
+		Paint gridPaint = new Paint();
+		gridPaint.setAntiAlias(false);
+		gridPaint.setStyle(Paint.Style.STROKE);
+		gridPaint.setStrokeWidth(3);
+		gridPaint.setColor(Color.GRAY);
+		Canvas backCanvas = new Canvas(m_BackBitmap);
+		backCanvas.drawColor(Color.rgb(237,237,231));
+		for( int i=0; i<m_bitmapSize.x; i+=50){
+			backCanvas.drawLine(i, 0, i, m_bitmapSize.y, gridPaint);
+		}
+		for( int i=0; i<m_bitmapSize.y; i+=50){
+			backCanvas.drawLine(0, i, m_bitmapSize.x, i, gridPaint);
+		}
 	}
 
 
@@ -136,6 +170,8 @@ public class Painter {
 		return m_MainBitmap;
 	}
 
+	public Bitmap getBackBitmap(){ return  m_BackBitmap; }
+
 	public void changeCurrentTool(int color, int size){
 		if(m_CurrentTool == TOOL_DRAW){
 			m_PenPaint.setStrokeWidth(size);
@@ -151,7 +187,7 @@ public class Painter {
 
 		m_MainBitmap = Bitmap.createBitmap(new_w, new_h, Bitmap.Config.RGBA_F16, true);
 		m_MainCanvas = new Canvas(m_MainBitmap);
-		m_MainCanvas.drawColor(Color.WHITE);
+		//m_MainCanvas.drawColor(Color.WHITE);
 
 		switch (edge){
 			case 0:

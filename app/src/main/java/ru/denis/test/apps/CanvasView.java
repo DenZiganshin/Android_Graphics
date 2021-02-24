@@ -193,6 +193,8 @@ public class CanvasView extends View {
 		canvas.drawColor(Color.GRAY);
 		RectF rectDst = m_cvsOp.getDstRect();
 		Bitmap bitmap = m_Painter.getMainBitmap();
+		Bitmap back = m_Painter.getBackBitmap();
+		canvas.drawBitmap(back, rectSrc, rectDst, null);
 		canvas.drawBitmap(bitmap, rectSrc, rectDst, null);
 
 		m_cvsOp.draw(canvas);
