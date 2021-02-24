@@ -1,63 +1,68 @@
 
-onTouchStart
-	new_point = 
-	{
-		prev_pos;
-		curr_pos;
-		id
-	}
-	points.add(new_point)
-	if(points.size > 1){
-		state = complex_gesture;
-	}
-
-onTouchRelease
-	point.remove(points.find(id))
-	if(points.size < 2){
-		state = simple_gesture;
-	}
-	
-onMove
-	for(all_moving_points)
-		point = points.find(id)
-		point.update(all_moving_points[id].coord)
-	
-	if(points.size < 2)
-		return;	
-	
-	PointA = points[0]
-	PointB = points[1]
-	
-	if(isScale(PointA, PointB))
-	{
-		distanceScale = 
-	}
-	else if(isMove(PointA, PointB))
-	{
-		distanceMove = 
-	}
-		
-		
-		
-Painter:
 	max & min scaled size?
 		max depend on Scaled Pixel Size ?
+		min - 100%
+		
+	quadTo для рисования
 	
-	resize by edge drag
+	update eraser logic
+		 mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+	
+	trasparent layer + changable backgroud (grid or lines ? image ? like notebook)
 	
 	select cut/past
-	save selection to file?
+		класс gui -> рисовать выделительный прямоугольник
+			копировать из основного bitmap область прямоугольника в bitmap "буффера обмена"
+			переместить на новое место (перетаскивание)
+			
+			
+		save selection to file?
 	
 	auto save/load previous file
-	save/load file - dialog?
 	
 	status bar : current(last?) position, canvas size
 	
-	draw line from touchstart + touchmove + touchstop points
-	
 	size & color change dialog
+		диалог цвета:
+			ползунки
+				-rgb
+				-яркость - также меняет ползунки rgb ?
+				-прозрачность
+			preview цвета - label, imageButton?
+				
+		"шайба" как в sketchbook
+		нажатие - выбор инструмента
+		нажатие на выбранный - цвет / настройки
+		тянуть вниз - уменьшение размера
+			вверх - увеличение
+			отображать цифру и визуальный размер
+		нажатие-удержание - переход в режим редактирования интерфейса
+			перетаскивание
+			выход по back или onPause
+			
+	класс Интерфейс
+		класс шайба
+		маркеры для изменения размера полотна
+		
+	собственное меню?
+		fragment widget ?
+		
+	галерея заметок, возможность экспорта во внешнюю память
 	
-	DrawTools selection
+	undo/redo
+		
+		Жест move/scale отменяет незавершенное рисование
+	
+		Bitmap original = BitmapFactory.decodeStream(getAssets().open("1024x768.jpg"));
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		original.compress(Bitmap.CompressFormat.PNG, 100, out);
+		Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
+
+		Log.e("Original   dimensions", original.getWidth()+" "+original.getHeight());
+		Log.e("Compressed dimensions", decoded.getWidth()+" "+decoded.getHeight());
+		
+		стек из <byte[]> макс глубина из настроек
+	
 		
 		
 
