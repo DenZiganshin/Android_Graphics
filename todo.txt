@@ -1,23 +1,36 @@
 
 	max & min scaled size?
 		max depend on Scaled Pixel Size ?
+			выход за max_size переменных, хранящих размер полотна
 		min - 100%
 		
 	quadTo для рисования
 		
-	trasparent layer + changable backgroud (grid or lines ? image ? like notebook)
+	changable backgroud (grid or lines ? image ? like notebook)
 	
-	select cut/past
-		класс gui -> рисовать выделительный прямоугольник
-			копировать из основного bitmap область прямоугольника в bitmap "буффера обмена"
-			переместить на новое место (перетаскивание)
-			
-			
+	select 
+		move
+			класс gui -> рисовать выделительный прямоугольник
+				копировать из основного bitmap область прямоугольника в bitmap "буффера обмена"
+				переместить на новое место (перетаскивание)
+		resize			
 		save selection to file?
 	
-	auto save/load previous file
-	
 	status bar : current(last?) position, canvas size
+	
+	корректировка активного стилуса?
+	
+	очистка / создание нового полотна
+	
+	кратный зум
+	
+	настройка Paint.Cap (setStrokeCap())
+		BUTT
+			The stroke ends with the path, and does not project beyond it.  
+		ROUND
+			The stroke projects out as a semicircle, with the center at the end of the path.  
+		SQUARE
+			The stroke projects out as a square, with the center at the end of the path.  
 	
 	size & color change dialog
 		диалог цвета:
@@ -44,7 +57,8 @@
 	собственное меню?
 		fragment widget ?
 		
-	галерея заметок, возможность экспорта во внешнюю память
+	экспорт во внешнюю память
+	импорт из внешней памяти
 	
 	undo/redo
 		
