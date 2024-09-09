@@ -2,7 +2,7 @@ package ru.denis.test.apps;
 
 import android.graphics.*;
 
-public class CvsOperations {
+public class CanvasOperations {
 
 	// visual representation of resize markers. Visible only in 100% scale (for now)
 	RectF[] m_resizeMarkers;
@@ -37,7 +37,7 @@ public class CvsOperations {
 	// rect for canvas on-screen visualization
 	RectF m_RectDst;
 
-	public CvsOperations(){
+	public CanvasOperations(){
 
 	}
 
@@ -134,6 +134,7 @@ public class CvsOperations {
 		m_resizeMarkers[3].set(m_RectDst.left - halfWSize, m_RectDst.top+halfHeight-halfHSize, m_RectDst.left + halfWSize, m_RectDst.top+halfHeight+halfHSize);
 	}
 
+	//draw UI
 	public void draw(Canvas canvas){
 		if(!m_bIsScaled) {
 			for (int i = 0; i < m_resizeMarkers.length; ++i) {
