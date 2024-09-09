@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="#000"
               android:orientation="vertical">
+    <androidx.appcompat.widget.Toolbar
+            android:id="@+id/my_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
     <ru.denis.test.apps.CanvasView android:layout_width="match_parent" android:layout_height="match_parent" android:id="@+id/CanvasView">
     </ru.denis.test.apps.CanvasView>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:orientation="horizontal">
-        <ImageButton android:id="@+id/btnDraw" android:layout_width="56dp" android:layout_height="56dp" android:background="#00ff00" android:layout_margin="2dp"/>
-        <ImageButton android:id="@+id/btnErase" android:layout_width="56dp" android:layout_height="56dp" android:background="#0000ff" android:layout_margin="2dp"/>
-    </LinearLayout>
-
-    <ImageButton android:id="@+id/btnMenu" android:layout_width="56dp" android:layout_height="56dp" android:background="#aaaaaa" android:layout_alignParentRight="true"/>
-</RelativeLayout>
+</LinearLayout>

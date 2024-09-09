@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
-              android:layout_height="120dp"
+              android:layout_height="150dp"
               android:background="#3E80B4"
               android:orientation="vertical" >
 
@@ -20,13 +20,13 @@
         <Button
                 android:id="@+id/btn_ok"
                 android:layout_width="100dp"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:text="Ok" />
 
         <Button
                 android:id="@+id/btn_cancel"
                 android:layout_width="100dp"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginLeft="5dp"
                 android:text="Cancel" />
     </LinearLayout>

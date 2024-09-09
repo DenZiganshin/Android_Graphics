@@ -56,11 +56,10 @@ public class GestureDetect {
 	PointF m_prevCenterPoint;
 	float m_pointsDist, m_prevPointsDist;
 	boolean m_InProgress;
-	float m_diag;
 	float m_scale;
 
 	/* constructor */
-	public GestureDetect(float diag){
+	public GestureDetect(){
 		m_points = new TouchPt[2];
 		m_points[0] = new TouchPt();
 		m_points[1] = new TouchPt();
@@ -69,8 +68,6 @@ public class GestureDetect {
 		m_pointsDist = 0;
 		m_prevPointsDist = 0;
 		m_InProgress = false;
-		m_diag = diag;
-		Log.i("DBG_diag", String.valueOf(m_diag));
 	}
 
 	/* difference PointF pair */

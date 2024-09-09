@@ -3,12 +3,10 @@ package ru.denis.test.apps;
 import android.content.Context;
 import android.graphics.*;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 
 public class CanvasView extends View {
 
@@ -23,7 +21,7 @@ public class CanvasView extends View {
 	Rect rectSrc;
 
 	GestureDetect m_gestDect;
-	CvsOperations m_cvsOp;
+	CanvasOperations m_cvsOp;
 
 	float m_diag;
 
@@ -37,31 +35,11 @@ public class CanvasView extends View {
 
 	public CanvasView(Context ctx, AttributeSet attrs){
 		super(ctx, attrs);
-		m_diag = get_diag(ctx);
-		//get_screen_size(ctx);
+		//m_diag = get_diag(ctx);
 	}
 
 	public void changeTool(int toolId){
 		m_Painter.changeTool(toolId);
-	}
-
-	public void init()
-	{
-		m_CurrentState = STATE_DRAW;
-
-		//classes
-		m_gestDect = new GestureDetect(m_diag);
-		m_cvsOp = new CvsOperations();
-		m_Painter = new Painter();
-
-		//points
-		m_firstCoord = new PointF();
-		Point size = get_screen_size(getContext());
-		bitmap_size = new Point(size.x, size.y);
-		rectSrc = new Rect(0,0,bitmap_size.x, bitmap_size.y);
-		m_cvsOp.init(bitmap_size);
-		m_Painter.init(bitmap_size.x, bitmap_size.y);
-
 	}
 
 	public void init(Bitmap bitmap)
@@ -69,8 +47,8 @@ public class CanvasView extends View {
 		m_CurrentState = STATE_DRAW;
 
 		//classes
-		m_gestDect = new GestureDetect(m_diag);
-		m_cvsOp = new CvsOperations();
+		m_gestDect = new GestureDetect();
+		m_cvsOp = new CanvasOperations();
 		m_Painter = new Painter();
 
 		//points
@@ -81,6 +59,15 @@ public class CanvasView extends View {
 		m_Painter.init(bitmap);
 
 	}
+
+	public void NewBitmap(){
+
+	}
+
+	public void LoadBitmap(Bitmap bitmap){
+
+	}
+
 
 	private Point get_screen_size(Context ctx){
 		WindowManager manager = (WindowManager)ctx.getSystemService(Context.WINDOW_SERVICE);
@@ -111,6 +98,7 @@ public class CanvasView extends View {
 			case MotionEvent.ACTION_DOWN:
 				//start draw
 				if(m_CurrentState == STATE_DRAW) {
+					//check if coord inside main bitmap (also work with scaled)
 					RectF rectDst = m_cvsOp.getDstRect();
 					if(rectDst.contains(tx, ty)) {
 						PointF conv = m_cvsOp.getConvertedCoord(tx,ty);
@@ -126,12 +114,17 @@ public class CanvasView extends View {
 			case MotionEvent.ACTION_UP:
 				//end draw
 				if(m_CurrentState == STATE_DRAW){
+					//check if coord inside main bitmap (also work with scaled)
 					RectF rectDst = m_cvsOp.getDstRect();
 					if(rectDst.contains(tx, ty)) {
 						PointF conv = m_cvsOp.getConvertedCoord(tx,ty);
+						//use painter draw line
 						m_Painter.drawLine(m_firstCoord.x, m_firstCoord.y, conv.x, conv.y);
 						m_firstCoord.set(conv.x, conv.y);
 					}
+					
+					
+					
 				}else if(m_CurrentState == STATE_RESIZE) {
 					PointF result = m_cvsOp.stopResize();
 					if (result != null) {
@@ -141,28 +134,37 @@ public class CanvasView extends View {
 						m_Painter.resizeEdge(rectSrc.width(), rectSrc.height(), edge);
 					}
 				}
-
+				
+				// UP - end of action - reset m_CurrentState
 				m_CurrentState = STATE_DRAW;
 				invalidate();
 				break;
+				
 			case MotionEvent.ACTION_MOVE:
 				if(event.getPointerCount() > 1){
 					//cancel draw
 
+					//process move/scale operation with parameters from GestureDetect
 					m_CurrentState = STATE_SCALE;
-
 					m_cvsOp.MoveScale(m_gestDect.getOffsetX(), m_gestDect.getOffsetY(), m_gestDect.getScale(), m_gestDect.getCenter());
 
 					invalidate();
 				}else{
+					
+					
 					//draw
 					if(m_CurrentState == STATE_DRAW){
+						//check if coord inside main bitmap (also work with scaled)
 						RectF rectDst = m_cvsOp.getDstRect();
 						if(rectDst.contains(tx, ty)) {
 							PointF conv = m_cvsOp.getConvertedCoord(tx,ty);
 							m_Painter.drawLine(m_firstCoord.x, m_firstCoord.y, conv.x, conv.y);
 							m_firstCoord.set(conv.x, conv.y);
 						}
+						
+						
+						
+						
 					}else if(m_CurrentState == STATE_RESIZE){
 						//Log.i("DBG_RES", String.valueOf(tx) + "_"+String.valueOf(ty));
 						m_cvsOp.progressResize(tx,ty);
@@ -190,13 +192,21 @@ public class CanvasView extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+		//select color?
 		canvas.drawColor(Color.GRAY);
+		// rect of main bitmap
 		RectF rectDst = m_cvsOp.getDstRect();
+		//get main bitmap
 		Bitmap bitmap = m_Painter.getMainBitmap();
+		//get background
 		Bitmap back = m_Painter.getBackBitmap();
+		
+		//draw background
 		canvas.drawBitmap(back, rectSrc, rectDst, null);
+		//draw main
 		canvas.drawBitmap(bitmap, rectSrc, rectDst, null);
 
+		//draw UI (resize markers, main bitmap in resize process)
 		m_cvsOp.draw(canvas);
 	}
 }

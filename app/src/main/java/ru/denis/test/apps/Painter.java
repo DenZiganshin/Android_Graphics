@@ -26,58 +26,6 @@ public class Painter {
 
 	}
 
-	public void init(int w, int h){
-
-		//point
-		m_bitmapSize = new Point(w,h);
-
-		//draw
-		m_PenPaint = new Paint();
-		m_PenPaint.setAntiAlias(false);
-		m_PenPaint.setStyle(Paint.Style.STROKE);
-		m_PenPaint.setStrokeWidth(1);
-		m_PenPaint.setColor(Color.BLACK);
-
-		m_RedPaint = new Paint();
-		m_RedPaint.setAntiAlias(false);
-		m_RedPaint.setStyle(Paint.Style.FILL);
-		m_RedPaint.setColor(Color.RED);
-
-		m_BluePaint = new Paint();
-		m_BluePaint.setAntiAlias(false);
-		m_BluePaint.setStyle(Paint.Style.FILL);
-		m_BluePaint.setColor(Color.BLUE);
-
-		m_ClearPaint = new Paint();
-		m_ClearPaint.setAntiAlias(false);
-		m_ClearPaint.setStyle(Paint.Style.STROKE);
-		m_ClearPaint.setStrokeWidth(3);
-		m_ClearPaint.setColor(Color.WHITE);
-
-		m_CurrentPaint = m_PenPaint;
-		m_CurrentTool = TOOL_DRAW;
-
-		m_MainBitmap = Bitmap.createBitmap(m_bitmapSize.x, m_bitmapSize.y, Bitmap.Config.RGBA_F16, true);
-		m_MainCanvas = new Canvas(m_MainBitmap);
-		//m_MainCanvas.drawColor(Color.WHITE);
-
-		//grid background
-		m_BackBitmap = Bitmap.createBitmap(m_bitmapSize.x, m_bitmapSize.y, Bitmap.Config.RGBA_F16, true);
-		Paint gridPaint = new Paint();
-		gridPaint.setAntiAlias(false);
-		gridPaint.setStyle(Paint.Style.STROKE);
-		gridPaint.setStrokeWidth(3);
-		gridPaint.setColor(Color.GRAY);
-		Canvas backCanvas = new Canvas(m_BackBitmap);
-		backCanvas.drawColor(Color.rgb(237,237,231));
-		for( int i=0; i<m_bitmapSize.x; i+=50){
-			backCanvas.drawLine(i, 0, i, m_bitmapSize.y, gridPaint);
-		}
-		for( int i=0; i<m_bitmapSize.y; i+=50){
-			backCanvas.drawLine(0, i, m_bitmapSize.x, i, gridPaint);
-		}
-	}
-
 	public void init(Bitmap bitmap){
 
 		//point
@@ -89,6 +37,8 @@ public class Painter {
 		m_PenPaint.setStyle(Paint.Style.STROKE);
 		m_PenPaint.setStrokeWidth(1);
 		m_PenPaint.setColor(Color.BLACK);
+		m_PenPaint.setStrokeJoin(Paint.Join.ROUND);
+		m_PenPaint.setStrokeCap(Paint.Cap.ROUND);
 
 		m_RedPaint = new Paint();
 		m_RedPaint.setAntiAlias(false);
@@ -104,6 +54,8 @@ public class Painter {
 		m_ClearPaint.setAntiAlias(false);
 		m_ClearPaint.setStyle(Paint.Style.STROKE);
 		m_ClearPaint.setStrokeWidth(3);
+		m_ClearPaint.setStrokeJoin(Paint.Join.ROUND);
+		m_ClearPaint.setStrokeCap(Paint.Cap.ROUND);
 		m_ClearPaint.setColor(Color.WHITE);
 		m_ClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
@@ -148,6 +100,14 @@ public class Painter {
 		}
 	}
 
+	public void swapTool(){
+		if(m_CurrentTool == TOOL_DRAW){
+			changeTool(TOOL_ERASE);
+		}else if(m_CurrentTool == TOOL_ERASE){
+			changeTool(TOOL_DRAW);
+		}
+	}
+
 	public int getCurrentColor(){
 		if(m_CurrentTool == TOOL_DRAW){
 			return m_PenPaint.getColor();
@@ -182,6 +142,7 @@ public class Painter {
 		}
 	}
 
+	//resize (redraw) bitmap in direction
 	public void resizeEdge(int new_w, int new_h, int edge){
 		Bitmap tmp = Bitmap.createBitmap(m_MainBitmap);
 
